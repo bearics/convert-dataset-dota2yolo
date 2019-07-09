@@ -38,10 +38,10 @@ class DotaBox:
 
 class YoloBox:
   def __init__(self):
-    self.x_min = .0
-    self.y_min = .0
-    self.x_max = .0
-    self.y_max = .0
+    self.x_min = 0
+    self.y_min = 0
+    self.x_max = 0
+    self.y_max = 0
     self.class_id = ""
 
   def __init__(self, dota_box: DotaBox):
@@ -52,17 +52,22 @@ class YoloBox:
       x_list.append(dota_box.points[idx].x)
       y_list.append(dota_box.points[idx].y)
 
-    self.x_min = min(x_list)
-    self.y_min = min(y_list)
-    self.x_max = max(x_list)
-    self.y_max = max(y_list)
+    self.x_min = int(min(x_list))
+    self.y_min = int(min(y_list))
+    self.x_max = int(max(x_list))
+    self.y_max = int(max(y_list))
     self.class_id = dota_box.category
 
   def to_string(self):
-    return "{} {} {} {} {}".format(self.x_min, self.y_min, self.x_max, self.y_max, self.class_id)
+    return "{},{},{},{},{}".format(self.x_min, self.y_min, self.x_max, self.y_max, self.class_id)
 
 
-def convert_dota2yolov3(dota_path, out_path):
+def convert_dota2yolov3(dota_path, out_path, image_path):
+  # check whether a file exists.
+  if os.path.isfile(out_path):
+    print("Error. File already exists in {}. Please delete the file or change out_path.".format(out_path))
+    return
+
   dataset_paths = [f for f in listdir(dota_path) if isfile(join(dota_path, f))]
   for dataset_path in dataset_paths:
     dota_boxes = []
@@ -79,19 +84,26 @@ def convert_dota2yolov3(dota_path, out_path):
       continue
 
     # write
-    os.makedirs(out_path, exist_ok=True)
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+
+    yolo_row = os.path.join(image_path, dataset_path.split('.')[0] + ".png")
+    for dota_box in dota_boxes:
+      yolo_row += " " + YoloBox(dota_box).to_string()
+
     try:
-      with open(os.path.join(out_path, dataset_path), "w") as f:
-        for dota_box in dota_boxes:
-          f.write(YoloBox(dota_box).to_string() + '\n')
+      with open(os.path.join(out_path), "a") as f:
+        f.write(yolo_row + '\n')
     except Exception as e:
       print("Fail to save file as .txt. Error is [{}]".format(e))
       continue
 
 
 def main():
-  print("arg : {}, {}, {}".format(FLAGS.dota_path, FLAGS.out_path, FLAGS.difficult))
-  convert_dota2yolov3(FLAGS.dota_path, FLAGS.out_path)
+  print("Start to conver DOTA's labelTxt-v1.5 dataset for qqwweee/keras-yolo3")
+  if ".txt" not in FLAGS.out_path:
+    print("Please '--out_path' must be contain '.txt'")
+    return
+  convert_dota2yolov3(FLAGS.dota_path, FLAGS.out_path, FLAGS.image_path)
 
 
 if __name__ == '__main__':
@@ -112,13 +124,18 @@ if __name__ == '__main__':
   )
 
   parser.add_argument(
+    "--image_path", nargs='?', type=str, required=False, default='image',
+    help="Image path using in yolo dataset when training. Default is './image'"
+  )
+
+  parser.add_argument(
     "--dota_path", nargs='?', type=str, required=False, default='dota',
     help="DOTA labels' dir path. Default is './dota'"
   )
 
   parser.add_argument(
-    "--out_path", nargs='?', type=str, required=False, default='yolo',
-    help="Directory where the coverted data will be stored. Default is './yolo'"
+    "--out_path", nargs='?', type=str, required=False, default='yolo/result.txt',
+    help="Directory where the coverted data will be stored. Default is './yolo/result.txt'"
   )
 
   parser.set_defaults(difficult=True)
