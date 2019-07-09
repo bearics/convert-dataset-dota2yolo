@@ -1,0 +1,16 @@
+baseball-diamond
+bridge
+ground-track-field
+tennis-court
+helicopter
+plane
+large-vehicle
+harbor
+storage-tank
+small-vehicle
+soccer-ball-field
+roundabout
+swimming-pool
+container-crane
+ship
+basketball-court

@@ -4,6 +4,12 @@ import argparse
 from os import listdir
 from os.path import isfile, join
 
+class_type = [
+  "large-vehicle", "plane", "small-vehicle", "harbor", "baseball-diamond", "ground-track-field", "container-crane",
+  "basketball-court", "helicopter", "roundabout", "storage-tank", "soccer-ball-field", "ship", "swimming-pool",
+  "bridge", "tennis-court"
+]
+
 
 class Point:
   def __init__(self):
@@ -56,7 +62,7 @@ class YoloBox:
     self.y_min = int(min(y_list))
     self.x_max = int(max(x_list))
     self.y_max = int(max(y_list))
-    self.class_id = dota_box.category
+    self.class_id = int(class_type.index(dota_box.category))
 
   def to_string(self):
     return "{},{},{},{},{}".format(self.x_min, self.y_min, self.x_max, self.y_max, self.class_id)
